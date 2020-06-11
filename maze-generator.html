@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>{ Maze generator }</title>
+<script>
+/*
+Maze Generator
+Autor: Vil Mario
+Escrito: Por ahí de 2017
+Detalles:
+	Genera un mapa bidimensional con un array
+	Coloca un 0 en las cordenadas 0, 0
+	Selecciona aleatoriamente una celda adyacente
+	Coloca en ella un 1 (contador + 1)
+	Repite hasta no tener opciones.
+	Si no hay opciones, busca el "camino" de regreso (usando el contador - 1)
+	El algoritmo debe recorrer todo el mapa de ida y luego de vuelta hasta 0
+
+¡Éxito para todos!
+*/
+
+function generate_maze(tamano, tilesx, tilesy, instant) {
+
+	//Canvas
+	var canvas    = document.createElement("canvas");
+	canvas.width  = tilesx * tamano;
+	canvas.height = tilesy * tamano;
+
+	// Pinta el fondo de negro, inicializa blanco, añade al documento
+	var ctx       = canvas.getContext("2d");
+	ctx.fillStyle = "#000000";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	ctx.fillStyle = "#FFFFFF";
+	document.body.appendChild(canvas);
+
+	// "Mapa" de marcas
+	var mapa = new Array(tilesy);
+	for (var i = 0; i < tilesy; i++) {
+		mapa[i] = new Array(tilesx);
+	}
+
+	//Inicializa el "gusano" que recorrerá el "mapa"
+	var gusano = {x: 0, y: 0};
+	
+	// Inicializa el contador
+	var contador = 0;
+
+	// "Coloca" al gusano en el primer tile del mapa
+	mapa[gusano.y][gusano.x] = contador;
+
+	function siguiente(){
+		//Busca mosaicos adyacentes sin visitar
+		var opciones = new Array();
+		if (gusano.x > 0        && mapa[gusano.y][gusano.x-1] == undefined) {opciones.push("izq");}
+		if (gusano.x < tilesx-1 && mapa[gusano.y][gusano.x+1] == undefined) {opciones.push("der");}
+		if (gusano.y > 0        && mapa[gusano.y-1][gusano.x] == undefined) {opciones.push("arr");}
+		if (gusano.y < tilesy-1 && mapa[gusano.y+1][gusano.x] == undefined) {opciones.push("aba");}
+		
+		//Si no hay, busca el ultimo mosaico adyacente pisado
+		var retorno = !opciones.length;
+		if (retorno) {
+			     if (gusano.x > 0        && mapa[gusano.y][gusano.x-1] == contador-1) {retorno="izq";}
+			else if (gusano.x < tilesx-1 && mapa[gusano.y][gusano.x+1] == contador-1) {retorno="der";}
+			else if (gusano.y > 0        && mapa[gusano.y-1][gusano.x] == contador-1) {retorno="arr";}
+			else if (gusano.y < tilesy-1 && mapa[gusano.y+1][gusano.x] == contador-1) {retorno="aba";}
+		}
+		
+		//Si hay mosaicos que pueda pisar, imprime el cuadro correspondiente (ida o vuelta)
+		switch (retorno || opciones[Math.floor(Math.random() * opciones.length)]) {
+			case "izq": gusano.x--; ctx.fillRect((gusano.x*tamano)+1,(gusano.y*tamano)+1,tamano-1,tamano-2); break;
+			case "der": gusano.x++; ctx.fillRect((gusano.x*tamano)  ,(gusano.y*tamano)+1,tamano-1,tamano-2); break;
+			case "arr": gusano.y--; ctx.fillRect((gusano.x*tamano)+1,(gusano.y*tamano)+1,tamano-2,tamano-1); break;
+			case "aba": gusano.y++; ctx.fillRect((gusano.x*tamano)+1,(gusano.y*tamano)  ,tamano-2,tamano-1); break;
+			default: break;
+		}
+		
+		//Aumenta o decrementa segun el recorrido (hubo opción o tuvo que regresar)
+		if (retorno) contador--; else contador++;
+
+		//Rellena el "mapa" (array)
+		mapa[gusano.y][gusano.x] = contador;
+	}
+
+
+	// Recorre el "mapa" // Continúa siempre y cuando el contador no haya regresado a 0
+	if(instant)
+		do {siguiente();} while (contador > 0);
+	else
+		var interval = setInterval(function(){siguiente(); if(contador <= 0) clearInterval(interval);}, 100);
+
+	// Comentar para ignorar la entrada y la salida
+	// ctx.fillRect((gusano.x*tamano)+1,(gusano.y*tamano),tamano-2,tamano-1);
+	// ctx.fillRect(((tilesx-1)*tamano)+1,((tilesy-1)*tamano)+1,tamano-2,tamano-1);
+}
+</script>
+</head>
+<body onload="generate_maze(20,10,10,false)"></body>
+</html>
